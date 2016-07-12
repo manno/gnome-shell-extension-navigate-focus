@@ -1,5 +1,8 @@
 // journalctl -f SYSLOG_IDENTIFIER=org.gnome.Shell.desktop
-/* jshint esversion: 6 */
+//
+// vim: ts=4 sw=4
+// jshint esversion: 6
+//
 const ExtensionUtils = imports.misc.extensionUtils;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
@@ -10,133 +13,121 @@ const St = imports.gi.St;
 const Wnck = imports.gi.Wnck;
 const Shell = imports.gi.Shell;
 
-function _showHello() {
-  let monitor = Main.layoutManager.primaryMonitor;
-
-  let focusWindow = global.display.focus_window;
-
-
-
-  let aWindow = imports.gi.Wnck.Screen.get_default_screen().get_windows()[0];
-  aWindow.get_stage.navigate_focus(null, Gtk.DirectionType.DOWN, false);
-}
-
 const Extension = new Lang.Class({
     Name: 'Extension',
 
     _init: function() {
-        this._windowList = null;
-        this._windowList = [];
-        Main.layoutManager.connect('startup-complete',
-                                   Lang.bind(this, this._setKeybinding));
+        global.log("DEBUG: NavigateFocus enabled");
+        this._setKeybinding();
     },
 
-    enable: function() {
-        global.log("NAVNAV inner enable");
+    focusLeft: function() {
+        this._focusWindow(this._sortedWindowListLeftToRight());
     },
 
-    focus_left: function() {
-      // ./gnome-shell-extensions/extensions/screenshot-window-sizer/extension.js
-        this._buildWindowList();
+    focusRight: function() {
+        this._focusWindow(this._sortedWindowListRightToLeft());
+    },
+
+    focusUp: function() {
+        this._focusWindow(this._sortedWindowListTopToBottom());
+    },
+
+    focusDown: function() {
+        this._focusWindow(this._sortedWindowListBottomToTop());
+    },
+
+    _focusWindow: function(windowList) {
         let focusWindow = global.display.focus_window;
-        // global.log(focus_window.title, focusWindow.get_frame_rect().x, focusWindow.get_frame_rect().y);
-        // sort by x
-        let windowList = this.sort_windowlist_by_x_asc();
-        global.log(this._windowList);
         let cur = windowList.indexOf(focusWindow);
         if (cur - 1 < 0) {
             return;
         }
         let newWindow = windowList[cur - 1];
-        global.log("NAVNAV found" + newWindow);
         if (newWindow !== null) {
+            global.log("DEBUG: NavigateFocus found window");
+            this._debugWindow(newWindow);
             newWindow.activate(global.get_current_time());
         }
     },
 
-    focus_right: function() {
+    _sortedWindowListLeftToRight: function() {
+        return this._buildWindowList().sort(function(a, b) {
+            return a.get_frame_rect().x - b.get_frame_rect().x;
+        });
     },
 
-    focus_up: function() {
+    _sortedWindowListRightToLeft: function() {
+        return this._buildWindowList().sort(function(b, a) {
+            return a.get_frame_rect().x - b.get_frame_rect().x;
+        });
     },
 
-    focus_down: function() {
+    _sortedWindowListBottomToTop: function() {
+        return this._buildWindowList().sort(function(b, a) {
+            return a.get_frame_rect().y - b.get_frame_rect().y;
+        });
     },
 
-    sort_windowlist_by_x_asc: function() {
-        return this._windowList.sort(function(a, b) { return a.get_frame_rect().x - b.get_frame_rect().x; });
-    },
-
-    sort_windowlist_by_x_desc: function() {
-        return this._windowList.sort(function(b, a) { return a.get_frame_rect().x - b.get_frame_rect().x; });
-    },
-
-    sort_windowlist_by_y_asc: function() {
-        return this._windowList.sort(function(a, b) { return a.get_frame_rect().y - b.get_frame_rect().y; });
-    },
-
-    sort_windowlist_by_y_desc: function() {
-        return this._windowList.sort(function(b, a) { return a.get_frame_rect().y - b.get_frame_rect().y; });
+    _sortedWindowListTopToBottom: function() {
+        return this._buildWindowList().sort(function(a, b) {
+            return a.get_frame_rect().y - b.get_frame_rect().y;
+        });
     },
 
     _buildWindowList: function() {
-        this._windowList = [];
         let monitor = Main.layoutManager.primaryMonitor;
         let workspace = global.screen.get_active_workspace();
         let windows = global.display.get_tab_list(Meta.TabList.NORMAL, workspace);
-        this._windowList = windows.filter(Lang.bind(this, function(window) {
-            return window.get_monitor() == monitor.index;
+        return windows.filter(Lang.bind(this, function(window) {
+            //this._debugWindow(window);
+            return !window.is_hidden();
         }));
+    },
 
-        // TODO multiple monitors, add x,y to individual windows x,y ?
-        // TODO maybe there are absolute coords somewhere?
-        // Main.layoutManager.monitors.forEach(Lang.bind(this, function(monitor) {
-        //     if (monitor == Main.layoutManager.primaryMonitor) {
-        //         this._windowList.push(window);
-        //     }
-        // }));
+    _debugWindow: function(window) {
+        global.log("DEBUG: NavigateFocus window: ",
+                   window.get_frame_rect().x,
+                   window.get_frame_rect().y,
+                   window.is_hidden(),
+                   window.get_title()
+                  );
     },
 
     _setKeybinding: function() {
         Main.wm.setCustomKeybindingHandler("toggle-tiled-right",
                                            Shell.ActionMode.NORMAL,
                                            Lang.bind(this, function() {
-                                               this.focus_right();
+                                               this.focusRight();
                                            }));
         Main.wm.setCustomKeybindingHandler("toggle-tiled-left",
                                            Shell.ActionMode.NORMAL,
                                            Lang.bind(this, function() {
-                                               this.focus_left();
+                                               this.focusLeft();
                                            }));
         Main.wm.setCustomKeybindingHandler("maximize",
                                            Shell.ActionMode.NORMAL,
                                            Lang.bind(this, function() {
-                                               this.focus_up();
+                                               this.focusUp();
                                            }));
         Main.wm.setCustomKeybindingHandler("unmaximize",
                                            Shell.ActionMode.NORMAL,
                                            Lang.bind(this, function() {
-                                               this.focus_down();
+                                               this.focusDown();
                                            }));
     },
 
-    disable: function() {
-        global.log("NAVNAV inner disable");
-        if (!this._windowList)
-            return;
-
-        // TODO restore keybindings
-        // Main.wm.setCustomKeybindingHandler('toggle-tiled-right',
-                                           // Shell.ActionMode.NORMAL, {}
-                                          // );
-
-        this._windowList = null;
+    destroy: function() {
+        // restore keybindings?
+        Main.wm.removeKeybinding('toggle-tiled-right');
+        Main.wm.removeKeybinding('toggle-tiled-left');
+        Main.wm.removeKeybinding('maximize');
+        Main.wm.removeKeybinding('unmaximize');
+        global.log("DEBUG: NavigateFocus destroyed");
     }
 });
 
 function init() {
-    global.log("NAVNAV loading");
-    //return new Extension();
 }
 
 let _extension;
@@ -149,4 +140,3 @@ function disable() {
     _extension.destroy();
     _extension = null;
 }
-
