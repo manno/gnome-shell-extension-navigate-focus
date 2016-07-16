@@ -12,6 +12,8 @@ const Meta = imports.gi.Meta;
 const St = imports.gi.St;
 const Wnck = imports.gi.Wnck;
 const Shell = imports.gi.Shell;
+const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Schema = Me.imports.Schema;
 
 const Extension = new Lang.Class({
     Name: 'Extension',
@@ -19,6 +21,7 @@ const Extension = new Lang.Class({
     _init: function() {
         global.log("DEBUG: NavigateFocus enabled");
         this._setKeybinding();
+        Schema.getSettings(Me);
     },
 
     focusLeft: function() {
@@ -95,22 +98,22 @@ const Extension = new Lang.Class({
     },
 
     _setKeybinding: function() {
-        Main.wm.setCustomKeybindingHandler("toggle-tiled-right",
+        Main.wm.setCustomKeybindingHandler("focus-right",
                                            Shell.ActionMode.NORMAL,
                                            Lang.bind(this, function() {
                                                this.focusRight();
                                            }));
-        Main.wm.setCustomKeybindingHandler("toggle-tiled-left",
+        Main.wm.setCustomKeybindingHandler("focus-left",
                                            Shell.ActionMode.NORMAL,
                                            Lang.bind(this, function() {
                                                this.focusLeft();
                                            }));
-        Main.wm.setCustomKeybindingHandler("maximize",
+        Main.wm.setCustomKeybindingHandler("focus-up",
                                            Shell.ActionMode.NORMAL,
                                            Lang.bind(this, function() {
                                                this.focusUp();
                                            }));
-        Main.wm.setCustomKeybindingHandler("unmaximize",
+        Main.wm.setCustomKeybindingHandler("focus-down",
                                            Shell.ActionMode.NORMAL,
                                            Lang.bind(this, function() {
                                                this.focusDown();
@@ -119,10 +122,10 @@ const Extension = new Lang.Class({
 
     destroy: function() {
         // restore keybindings?
-        Main.wm.removeKeybinding('toggle-tiled-right');
-        Main.wm.removeKeybinding('toggle-tiled-left');
-        Main.wm.removeKeybinding('maximize');
-        Main.wm.removeKeybinding('unmaximize');
+        Main.wm.removeKeybinding('focus-right');
+        Main.wm.removeKeybinding('focus-left');
+        Main.wm.removeKeybinding('focus-up');
+        Main.wm.removeKeybinding('focus-down');
         global.log("DEBUG: NavigateFocus destroyed");
     }
 });
