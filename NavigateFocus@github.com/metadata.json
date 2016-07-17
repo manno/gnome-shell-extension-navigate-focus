@@ -1,1 +1,1 @@
-{"uuid": "NavigateFocus@github.com", "description": "testing", "shell-version": ["3.20.2"], "name": "Navigate Focus"}
+{"uuid": "NavigateFocus@github.com", "description": "keybinding to change window focus i3-style", "shell-version": ["3.20.1", "3.20.2", "3.20.3"], "name": "Navigate Focus"}

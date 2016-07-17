@@ -3,7 +3,6 @@
 // vim: ts=4 sw=4
 // jshint esversion: 6
 //
-const ExtensionUtils = imports.misc.extensionUtils;
 const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Lang = imports.lang;
@@ -13,15 +12,15 @@ const St = imports.gi.St;
 const Wnck = imports.gi.Wnck;
 const Shell = imports.gi.Shell;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
-const Schema = Me.imports.Schema;
+const Schema = Me.imports.schema;
 
 const Extension = new Lang.Class({
     Name: 'Extension',
 
     _init: function() {
         global.log("DEBUG: NavigateFocus enabled");
+        this.settings = Schema.getSettings(Me);
         this._setKeybinding();
-        Schema.getSettings(Me);
     },
 
     focusLeft: function() {
@@ -98,30 +97,26 @@ const Extension = new Lang.Class({
     },
 
     _setKeybinding: function() {
-        Main.wm.setCustomKeybindingHandler("focus-right",
-                                           Shell.ActionMode.NORMAL,
-                                           Lang.bind(this, function() {
-                                               this.focusRight();
-                                           }));
-        Main.wm.setCustomKeybindingHandler("focus-left",
-                                           Shell.ActionMode.NORMAL,
-                                           Lang.bind(this, function() {
-                                               this.focusLeft();
-                                           }));
-        Main.wm.setCustomKeybindingHandler("focus-up",
-                                           Shell.ActionMode.NORMAL,
-                                           Lang.bind(this, function() {
-                                               this.focusUp();
-                                           }));
-        Main.wm.setCustomKeybindingHandler("focus-down",
-                                           Shell.ActionMode.NORMAL,
-                                           Lang.bind(this, function() {
-                                               this.focusDown();
-                                           }));
+        this._addKeyBinding("focus-right", Lang.bind(this, function() {
+                                this.focusRight();
+                            }));
+        this._addKeyBinding("focus-left", Lang.bind(this, function() {
+                                this.focusLeft();
+                            }));
+        this._addKeyBinding("focus-up", Lang.bind(this, function() {
+                                this.focusUp();
+                            }));
+        this._addKeyBinding("focus-down", Lang.bind(this, function() {
+                                this.focusDown();
+                            }));
     },
 
+    _addKeyBinding: function(key, handler) {
+        Main.wm.addKeybinding(key, this.settings, Meta.KeyBindingFlags.NONE, Shell.ActionMode.NORMAL, handler);
+    },
+
+
     destroy: function() {
-        // restore keybindings?
         Main.wm.removeKeybinding('focus-right');
         Main.wm.removeKeybinding('focus-left');
         Main.wm.removeKeybinding('focus-up');

@@ -16,7 +16,6 @@
 
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
-const Gettext = imports.gettext;
 
 function getSettings(extension) {
     let schemaName = 'org.gnome.shell.extensions.NavigateFocus';
