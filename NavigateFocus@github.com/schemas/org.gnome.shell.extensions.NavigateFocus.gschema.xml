@@ -5,15 +5,15 @@
             <summary>Focus window left of current focus window</summary>
         </key>
         <key type="as" name="focus-right">
-            <default><![CDATA[['<super>l', '<super>right']]]></default>
+            <default><![CDATA[['<super>l', '<super>Right']]]></default>
             <summary>Focus window right of current focus window</summary>
         </key>
         <key type="as" name="focus-up">
-            <default><![CDATA[['<super>k', '<super>up']]]></default>
+            <default><![CDATA[['<super>k', '<super>Up']]]></default>
             <summary>Focus window up of current focus window</summary>
         </key>
         <key type="as" name="focus-down">
-            <default><![CDATA[['<super>j', '<super>down']]]></default>
+            <default><![CDATA[['<super>j', '<super>Down']]]></default>
             <summary>Focus window down of current focus window</summary>
         </key>
     </schema>

@@ -16,9 +16,10 @@
 
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
+const Me = imports.misc.extensionUtils.getCurrentExtension();
 
 function getSettings(extension) {
-    let schemaName = 'org.gnome.shell.extensions.NavigateFocus';
+    let schemaName = Me.metadata['settings-schema'];
     let schemaDir = extension.dir.get_child('schemas').get_path();
 
     // Extension installed in .local
