@@ -97,6 +97,12 @@ const Extension = new Lang.Class({
     },
 
     _setKeybinding: function() {
+        let xsettings = new Gio.Settings({ schema: "org.gnome.desktop.wm.keybindings" });
+        xsettings.set_strv('switch-to-workspace-1', ['<Super>1']);
+        xsettings.set_strv('switch-to-workspace-2', ['<Super>2']);
+        xsettings.set_strv('switch-to-workspace-3', ['<Super>3']);
+        xsettings.set_strv('switch-to-workspace-4', ['<Super>4']);
+
         this._addKeyBinding("focus-right", Lang.bind(this, function() {
                                 this.focusRight();
                             }));
