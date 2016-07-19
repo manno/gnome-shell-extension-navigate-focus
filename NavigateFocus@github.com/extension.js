@@ -103,6 +103,16 @@ const Extension = new Lang.Class({
         xsettings.set_strv('switch-to-workspace-3', ['<Super>3']);
         xsettings.set_strv('switch-to-workspace-4', ['<Super>4']);
 
+        // remove existing bindings - TODO search for them, restore afterwards?
+        xsettings.set_strv('minimize', []);           // <Super>h
+        xsettings.set_strv('maximize', []);           // <Super>Up
+
+        // org.gnome.settings-daemon.plugins.media-keys screensaver '<Primary><Alt>l'
+
+        xsettings = new Gio.Settings({ schema: "org.gnome.mutter.keybindings" });
+        xsettings.set_strv('toggle-tiled-right', []); // <Super>Right
+        xsettings.set_strv('toggle-tiled-left', []);  // <Super>Left
+
         this._addKeyBinding("focus-right",
                             Lang.bind(this, function() { this.focusRight(); }));
         this._addKeyBinding("focus-left",
