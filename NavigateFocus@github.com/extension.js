@@ -103,18 +103,14 @@ const Extension = new Lang.Class({
         xsettings.set_strv('switch-to-workspace-3', ['<Super>3']);
         xsettings.set_strv('switch-to-workspace-4', ['<Super>4']);
 
-        this._addKeyBinding("focus-right", Lang.bind(this, function() {
-                                this.focusRight();
-                            }));
-        this._addKeyBinding("focus-left", Lang.bind(this, function() {
-                                this.focusLeft();
-                            }));
-        this._addKeyBinding("focus-up", Lang.bind(this, function() {
-                                this.focusUp();
-                            }));
-        this._addKeyBinding("focus-down", Lang.bind(this, function() {
-                                this.focusDown();
-                            }));
+        this._addKeyBinding("focus-right",
+                            Lang.bind(this, function() { this.focusRight(); }));
+        this._addKeyBinding("focus-left",
+                            Lang.bind(this, function() { this.focusLeft(); }));
+        this._addKeyBinding("focus-up",
+                            Lang.bind(this, function() { this.focusUp(); }));
+        this._addKeyBinding("focus-down",
+                            Lang.bind(this, function() { this.focusDown(); }));
     },
 
     _addKeyBinding: function(key, handler) {

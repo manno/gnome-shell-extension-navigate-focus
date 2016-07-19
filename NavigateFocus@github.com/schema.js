@@ -33,6 +33,7 @@ function getSettings() {
     }
     // Extension installed system-wide
     else {
+        global.log("DEBUG NavigateFocus: should not happen");
         if (Gio.Settings.list_schemas().indexOf(schemaName) == -1)
             throw "Schema \"%s\" not found.".format(schemaName);
         return new Gio.Settings({ schema: schemaName });
