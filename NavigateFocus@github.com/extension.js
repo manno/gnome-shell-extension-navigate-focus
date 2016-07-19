@@ -3,23 +3,24 @@
 // vim: ts=4 sw=4
 // jshint esversion: 6
 //
-const GLib = imports.gi.GLib;
 const Gio = imports.gi.Gio;
 const Lang = imports.lang;
 const Main = imports.ui.main;
 const Meta = imports.gi.Meta;
 const St = imports.gi.St;
-const Wnck = imports.gi.Wnck;
 const Shell = imports.gi.Shell;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Schema = Me.imports.schema;
-const Settings = Schema.getSettings();
+const CustomSettings = Schema.getSettings();
+const WmKeybindings = new Gio.Settings({ schema: "org.gnome.desktop.wm.keybindings" });
+const MutterKeybindings = new Gio.Settings({ schema: "org.gnome.mutter.keybindings" });
 
 const Extension = new Lang.Class({
     Name: 'Extension',
 
     _init: function() {
         global.log("DEBUG: NavigateFocus enabled");
+        this._storeSettings();
         this._setKeybinding();
     },
 
@@ -96,39 +97,64 @@ const Extension = new Lang.Class({
                   );
     },
 
+    _storeSettings: function() {
+        this._wmBindings = {
+            'switch-to-workspace-1': [],
+            'switch-to-workspace-2': [],
+            'switch-to-workspace-3': [],
+            'switch-to-workspace-4': [],
+            'switch-to-workspace-5': [],
+            'minimize': [],
+            'maximize': []
+        };
+        this._mutterBindings = {
+            'toggle-tiled-right': [],
+            'toggle-tiled-left': []
+        };
+        this._storeSettingsFor(WmKeybindings, this._wmBindings);
+        this._storeSettingsFor(MutterKeybindings, this._mutterBindings);
+    },
+
+    _storeSettingsFor: function(settings, bindings) {
+        for(let name in bindings) {
+            bindings[name] = settings.get_strv(name);
+        }
+    },
+
+    _restoreSettingsFor: function(settings, bindings) {
+        for(let name in bindings) {
+            settings.set_strv(name, bindings[name]);
+        }
+    },
+
     _setKeybinding: function() {
-        let xsettings = new Gio.Settings({ schema: "org.gnome.desktop.wm.keybindings" });
-        xsettings.set_strv('switch-to-workspace-1', ['<Super>1']);
-        xsettings.set_strv('switch-to-workspace-2', ['<Super>2']);
-        xsettings.set_strv('switch-to-workspace-3', ['<Super>3']);
-        xsettings.set_strv('switch-to-workspace-4', ['<Super>4']);
+        WmKeybindings.set_strv('switch-to-workspace-1', ['<Super>1']);
+        WmKeybindings.set_strv('switch-to-workspace-2', ['<Super>2']);
+        WmKeybindings.set_strv('switch-to-workspace-3', ['<Super>3']);
+        WmKeybindings.set_strv('switch-to-workspace-4', ['<Super>4']);
+        WmKeybindings.set_strv('switch-to-workspace-5', ['<Super>5']);
+        WmKeybindings.set_strv('minimize', []);           // <Super>h
+        WmKeybindings.set_strv('maximize', []);           // <Super>Up
+        MutterKeybindings.set_strv('toggle-tiled-right', []); // <Super>Right
+        MutterKeybindings.set_strv('toggle-tiled-left', []);  // <Super>Left
 
-        // remove existing bindings - TODO search for them, restore afterwards?
-        xsettings.set_strv('minimize', []);           // <Super>h
-        xsettings.set_strv('maximize', []);           // <Super>Up
-
-        // org.gnome.settings-daemon.plugins.media-keys screensaver '<Primary><Alt>l'
-
-        xsettings = new Gio.Settings({ schema: "org.gnome.mutter.keybindings" });
-        xsettings.set_strv('toggle-tiled-right', []); // <Super>Right
-        xsettings.set_strv('toggle-tiled-left', []);  // <Super>Left
-
-        this._addKeyBinding("focus-right",
+        this._addKeybinding("focus-right",
                             Lang.bind(this, function() { this.focusRight(); }));
-        this._addKeyBinding("focus-left",
+        this._addKeybinding("focus-left",
                             Lang.bind(this, function() { this.focusLeft(); }));
-        this._addKeyBinding("focus-up",
+        this._addKeybinding("focus-up",
                             Lang.bind(this, function() { this.focusUp(); }));
-        this._addKeyBinding("focus-down",
+        this._addKeybinding("focus-down",
                             Lang.bind(this, function() { this.focusDown(); }));
     },
 
-    _addKeyBinding: function(key, handler) {
-        Main.wm.addKeybinding(key, Settings, Meta.KeyBindingFlags.NONE, Shell.ActionMode.NORMAL, handler);
+    _addKeybinding: function(key, handler) {
+        Main.wm.addKeybinding(key, CustomSettings, Meta.KeyBindingFlags.NONE, Shell.ActionMode.NORMAL, handler);
     },
 
-
     destroy: function() {
+        this._restoreSettingsFor(WmKeybindings, this._wmBindings);
+        this._restoreSettingsFor(MutterKeybindings, this._mutterBindings);
         Main.wm.removeKeybinding('focus-right');
         Main.wm.removeKeybinding('focus-left');
         Main.wm.removeKeybinding('focus-up');
