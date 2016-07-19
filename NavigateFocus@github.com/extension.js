@@ -13,13 +13,13 @@ const Wnck = imports.gi.Wnck;
 const Shell = imports.gi.Shell;
 const Me = imports.misc.extensionUtils.getCurrentExtension();
 const Schema = Me.imports.schema;
+const Settings = Schema.getSettings();
 
 const Extension = new Lang.Class({
     Name: 'Extension',
 
     _init: function() {
         global.log("DEBUG: NavigateFocus enabled");
-        this.settings = Schema.getSettings(Me);
         this._setKeybinding();
     },
 
@@ -118,7 +118,7 @@ const Extension = new Lang.Class({
     },
 
     _addKeyBinding: function(key, handler) {
-        Main.wm.addKeybinding(key, this.settings, Meta.KeyBindingFlags.NONE, Shell.ActionMode.NORMAL, handler);
+        Main.wm.addKeybinding(key, Settings, Meta.KeyBindingFlags.NONE, Shell.ActionMode.NORMAL, handler);
     },
 
 

@@ -16,11 +16,11 @@
 
 const Gio = imports.gi.Gio;
 const GLib = imports.gi.GLib;
-const Me = imports.misc.extensionUtils.getCurrentExtension();
+const Extension = imports.misc.extensionUtils.getCurrentExtension();
 
-function getSettings(extension) {
-    let schemaName = Me.metadata['settings-schema'];
-    let schemaDir = extension.dir.get_child('schemas').get_path();
+function getSettings() {
+    let schemaName = Extension.metadata['settings-schema'];
+    let schemaDir = Extension.dir.get_child('schemas').get_path();
 
     // Extension installed in .local
     if (GLib.file_test(schemaDir + '/gschemas.compiled', GLib.FileTest.EXISTS)) {
