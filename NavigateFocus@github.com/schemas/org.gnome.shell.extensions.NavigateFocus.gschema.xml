@@ -1,20 +1,20 @@
 <schemalist>
     <schema id="org.gnome.shell.extensions.NavigateFocus" path="/org/gnome/shell/extensions/NavigateFocus/">
         <key type="as" name="focus-left">
-            <default><![CDATA[['<super>h', '<super>Left']]]></default>
+            <default><![CDATA[['<Super>h', '<Super>Left']]]></default>
             <summary>Focus window left of current focus window</summary>
         </key>
-        <key type="as" name="focus-right">
-            <default><![CDATA[['<super>l', '<super>Right']]]></default>
-            <summary>Focus window right of current focus window</summary>
+        <key type="as" name="focus-down">
+            <default><![CDATA[['<Super>j', '<Super>Down']]]></default>
+            <summary>Focus window down of current focus window</summary>
         </key>
         <key type="as" name="focus-up">
-            <default><![CDATA[['<super>k', '<super>Up']]]></default>
+            <default><![CDATA[['<Super>k', '<Super>Up']]]></default>
             <summary>Focus window up of current focus window</summary>
         </key>
-        <key type="as" name="focus-down">
-            <default><![CDATA[['<super>j', '<super>Down']]]></default>
-            <summary>Focus window down of current focus window</summary>
+        <key type="as" name="focus-right">
+            <default><![CDATA[['<Super>l', '<Super>Right']]]></default>
+            <summary>Focus window right of current focus window</summary>
         </key>
     </schema>
 </schemalist>
