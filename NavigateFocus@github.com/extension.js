@@ -25,87 +25,137 @@ const Extension = new Lang.Class({
     },
 
     focusLeft: function() {
-        this._focusWindow(this._buildWindowList().sort(this._sortWindowListLeftToRight.bind(this)));
-        // sort by nearest left upper corner first
-        // take first with x smaller my x
+        let windowList = this._buildWindowList()
+            .filter(Lang.bind(this, function(window) { return window.get_frame_rect().x < this._focusedWindowRect().x; }))
+            .sort(this._sortWindowListLeftToRight.bind(this));
+        this._focusWindow(windowList[0]);
     },
 
     focusRight: function() {
-        this._focusWindow(this._buildWindowList().sort(this._sortWindowListRightToLeft.bind(this)));
+        let windowList = this._buildWindowList()
+            .filter(Lang.bind(this, function(window) { return window.get_frame_rect().x > this._focusedWindowRect().x; }))
+            .sort(this._sortWindowListRightToLeft.bind(this));
+        this._focusWindow(windowList[0]);
     },
 
     focusUp: function() {
-        this._focusWindow(this._buildWindowList().sort(this._sortWindowListTopToBottom.bind(this)));
+        let windowList = this._buildWindowList()
+            .filter(Lang.bind(this, function(window) { return window.get_frame_rect().y < this._focusedWindowRect().y; }))
+            .sort(this._sortWindowListTopToBottom.bind(this));
+        this._focusWindow(windowList[0]);
     },
 
     focusDown: function() {
-        this._focusWindow(this._buildWindowList().sort(this._sortWindowListBottomToTop.bind(this)));
+        let windowList = this._buildWindowList()
+            .filter(Lang.bind(this, function(window) { return window.get_frame_rect().y > this._focusedWindowRect().y; }))
+            .sort(this._sortWindowListBottomToTop.bind(this));
+        this._focusWindow(windowList[0]);
     },
 
-    _focusWindow: function(windowList) {
-        let focusWindow = global.display.focus_window;
-        let cur = windowList.indexOf(focusWindow);
-        if (cur - 1 < 0) {
-            return;
-        }
-        let newWindow = windowList[cur - 1];
-        if (newWindow !== null) {
-            global.log("DEBUG: NavigateFocus found window");
-            this._debugWindow(newWindow);
+    _focusWindow: function(newWindow) {
+        if (newWindow !== null && newWindow !== undefined) {
+            // this._debugWindowChange(global.display.focus_window, newWindow);
             newWindow.activate(global.get_current_time());
         }
     },
 
-    _norm_x: function(x, y, weight) {
-        return Math.sqrt(x * x * weight + y * y * 1.7);
+    _focusedWindowRect: function() {
+        return global.display.focus_window.get_frame_rect();
     },
 
-    _norm_y: function(x, y, weight) {
-        return Math.sqrt(x * x + y * y * weight * 1.7);
+    _weight_x: function(origin, point, weight) {
+        let weighted = Math.abs(origin.x - point.x);
+        if (weighted === 0) {
+            weighted = 1;
+        }
+        return weighted * weight + Math.abs(origin.y - point.y);
+    },
+
+    _weight_y: function(origin, point, weight) {
+        let weighted = Math.abs(origin.y - point.y);
+        if (weighted === 0) {
+            weighted = 1;
+        }
+        return Math.abs(origin.x - point.x) + weighted * weight;
     },
 
     _sortWindowListLeftToRight: function(a, b) {
-        var _a = this._norm_x(a.get_frame_rect().x, a.get_frame_rect().y, 4.5);
-        var _b = this._norm_x(b.get_frame_rect().x, b.get_frame_rect().y, 4.5);
+        let _a = this._weight_y(a.get_frame_rect(), this._focusedWindowRect(), 10);
+        let _b = this._weight_y(b.get_frame_rect(), this._focusedWindowRect(), 10);
         return _a - _b;
     },
 
     _sortWindowListRightToLeft: function(a, b) {
-        var _a = this._norm_x(a.get_frame_rect().x, a.get_frame_rect().y, 3.5);
-        var _b = this._norm_x(b.get_frame_rect().x, b.get_frame_rect().y, 3.5);
-        return _b - _a;
+        let _a = this._weight_y(this._focusedWindowRect(), a.get_frame_rect(), 10);
+        let _b = this._weight_y(this._focusedWindowRect(), b.get_frame_rect(), 10);
+        return _a - _b;
     },
 
     _sortWindowListBottomToTop: function(a, b) {
-        var _a = this._norm_y(a.get_frame_rect().x, a.get_frame_rect().y, 5.5);
-        var _b = this._norm_y(b.get_frame_rect().x, b.get_frame_rect().y, 5.5);
-        return _b - _a;
+        let _a = this._weight_x(this._focusedWindowRect(), a.get_frame_rect(), 20);
+        let _b = this._weight_x(this._focusedWindowRect(), b.get_frame_rect(), 20);
+        return _a - _b;
     },
 
     _sortWindowListTopToBottom: function(a, b) {
-        var _a = this._norm_y(a.get_frame_rect().x, a.get_frame_rect().y, 5.5);
-        var _b = this._norm_y(b.get_frame_rect().x, b.get_frame_rect().y, 5.5);
+        let _a = this._weight_x(a.get_frame_rect(), this._focusedWindowRect(), 20);
+        let _b = this._weight_x(b.get_frame_rect(), this._focusedWindowRect(), 20);
         return _a - _b;
     },
 
     _buildWindowList: function() {
+        let focusWindow = global.display.focus_window;
         let monitor = Main.layoutManager.primaryMonitor;
         let workspace = global.screen.get_active_workspace();
         let windows = global.display.get_tab_list(Meta.TabList.NORMAL, workspace);
         return windows.filter(Lang.bind(this, function(window) {
-            //this._debugWindow(window);
-            return !window.is_hidden();
+            return !window.is_hidden() && focusWindow != window;
         }));
     },
 
-    _debugWindow: function(window) {
-        global.log("DEBUG: NavigateFocus window: ",
-                   window.get_frame_rect().x,
-                   window.get_frame_rect().y,
-                   window.is_hidden(),
-                   window.get_title()
+    _debugWindowChange: function(from, to) {
+        global.log("DEBUG: NavigateFocus change focus: ",
+                   'from (',
+                   from.get_frame_rect().x,
+                   from.get_frame_rect().y,
+                   ') to (',
+                   to.get_frame_rect().x,
+                   to.get_frame_rect().y,
+                   ')'
                   );
     },
+
+    // _debugWindow: function(window) {
+    //     global.log("DEBUG: NavigateFocus window: ",
+    //                window.get_frame_rect().x,
+    //                window.get_frame_rect().y,
+    //                window.is_hidden(),
+    //                window.get_title()
+    //               );
+    // },
+
+    // _debugRect: function(from, to) {
+    //     global.log("DEBUG: filter rect: ",
+    //                'from (',
+    //                from.x,
+    //                from.y,
+    //                ') to (',
+    //                to.x,
+    //                to.y,
+    //                ')'
+    //               );
+    // },
+
+    // _debugWindowList: function(windowList) {
+    //     for (let i = 0; i < windowList.length; i++) {
+    //         let window = windowList[i];
+    //         global.log(i,
+    //             window.get_title(),
+    //             window.get_frame_rect().x,
+    //             window.get_frame_rect().y
+    //         );
+    //     }
+    // },
 
     _storeSettings: function() {
         this._wmBindings = {
@@ -143,6 +193,7 @@ const Extension = new Lang.Class({
         WmKeybindings.set_strv('switch-to-workspace-3', ['<Super>3']);
         WmKeybindings.set_strv('switch-to-workspace-4', ['<Super>4']);
         WmKeybindings.set_strv('switch-to-workspace-5', ['<Super>5']);
+        WmKeybindings.set_strv('unmaximize', []);           // <Super>Down
         WmKeybindings.set_strv('minimize', []);           // <Super>h
         WmKeybindings.set_strv('maximize', []);           // <Super>Up
         MutterKeybindings.set_strv('toggle-tiled-right', []); // <Super>Right
