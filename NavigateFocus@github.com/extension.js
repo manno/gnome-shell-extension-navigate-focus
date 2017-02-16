@@ -25,19 +25,21 @@ const Extension = new Lang.Class({
     },
 
     focusLeft: function() {
-        this._focusWindow(this._sortedWindowListLeftToRight());
+        this._focusWindow(this._buildWindowList().sort(this._sortWindowListLeftToRight.bind(this)));
+        // sort by nearest left upper corner first
+        // take first with x smaller my x
     },
 
     focusRight: function() {
-        this._focusWindow(this._sortedWindowListRightToLeft());
+        this._focusWindow(this._buildWindowList().sort(this._sortWindowListRightToLeft.bind(this)));
     },
 
     focusUp: function() {
-        this._focusWindow(this._sortedWindowListTopToBottom());
+        this._focusWindow(this._buildWindowList().sort(this._sortWindowListTopToBottom.bind(this)));
     },
 
     focusDown: function() {
-        this._focusWindow(this._sortedWindowListBottomToTop());
+        this._focusWindow(this._buildWindowList().sort(this._sortWindowListBottomToTop.bind(this)));
     },
 
     _focusWindow: function(windowList) {
@@ -54,28 +56,36 @@ const Extension = new Lang.Class({
         }
     },
 
-    _sortedWindowListLeftToRight: function() {
-        return this._buildWindowList().sort(function(a, b) {
-            return a.get_frame_rect().x - b.get_frame_rect().x;
-        });
+    _norm_x: function(x, y, weight) {
+        return Math.sqrt(x * x * weight + y * y * 1.7);
     },
 
-    _sortedWindowListRightToLeft: function() {
-        return this._buildWindowList().sort(function(b, a) {
-            return a.get_frame_rect().x - b.get_frame_rect().x;
-        });
+    _norm_y: function(x, y, weight) {
+        return Math.sqrt(x * x + y * y * weight * 1.7);
     },
 
-    _sortedWindowListBottomToTop: function() {
-        return this._buildWindowList().sort(function(b, a) {
-            return a.get_frame_rect().y - b.get_frame_rect().y;
-        });
+    _sortWindowListLeftToRight: function(a, b) {
+        var _a = this._norm_x(a.get_frame_rect().x, a.get_frame_rect().y, 4.5);
+        var _b = this._norm_x(b.get_frame_rect().x, b.get_frame_rect().y, 4.5);
+        return _a - _b;
     },
 
-    _sortedWindowListTopToBottom: function() {
-        return this._buildWindowList().sort(function(a, b) {
-            return a.get_frame_rect().y - b.get_frame_rect().y;
-        });
+    _sortWindowListRightToLeft: function(a, b) {
+        var _a = this._norm_x(a.get_frame_rect().x, a.get_frame_rect().y, 3.5);
+        var _b = this._norm_x(b.get_frame_rect().x, b.get_frame_rect().y, 3.5);
+        return _b - _a;
+    },
+
+    _sortWindowListBottomToTop: function(a, b) {
+        var _a = this._norm_y(a.get_frame_rect().x, a.get_frame_rect().y, 5.5);
+        var _b = this._norm_y(b.get_frame_rect().x, b.get_frame_rect().y, 5.5);
+        return _b - _a;
+    },
+
+    _sortWindowListTopToBottom: function(a, b) {
+        var _a = this._norm_y(a.get_frame_rect().x, a.get_frame_rect().y, 5.5);
+        var _b = this._norm_y(b.get_frame_rect().x, b.get_frame_rect().y, 5.5);
+        return _a - _b;
     },
 
     _buildWindowList: function() {
